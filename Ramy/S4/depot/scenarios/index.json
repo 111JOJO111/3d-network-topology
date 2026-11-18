@@ -1,0 +1,11 @@
+{
+  "default": "ping.json",
+  "scenarios": [
+    { "file": "ping.json", "title": { "fr": "Ping : ARP puis ICMP", "en": "Ping: ARP then ICMP" } },
+    { "file": "dhcp.json", "title": { "fr": "DHCP : obtenir une adresse IP", "en": "DHCP: getting an IP address" } },
+    { "file": "udp.json", "title": { "fr": "UDP : envoyer sans connexion", "en": "UDP: sending without a connection" } },
+    { "file": "dns.json", "title": { "fr": "DNS : du nom à l'adresse IP", "en": "DNS: from a name to an IP address" } },
+    { "file": "tcp.json", "title": { "fr": "TCP : ouverture, données, fermeture", "en": "TCP: handshake, data, teardown" } },
+    { "file": "topologie-demo.json", "title": { "fr": "Topologie de démonstration", "en": "Demo topology" } }
+  ]
+}

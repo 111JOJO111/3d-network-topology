@@ -2,7 +2,7 @@
 
 **Objectif du sprint.** Produire la vidéo, finir la documentation et préparer la soutenance. Seuls ajouts : ceux demandés par le superviseur (éditeur de topologie, VR en WebGPU, vérification HTTPS).
 
-**Résultat attendu le dimanche.** Tous les livrables sont remis. Deux répétitions de soutenance à quatre.
+**Résultat attendu le dimanche.** Tous les livrables sont remis. Deux répétitions de soutenance à quatre. Laboratoire de Steve : salle 3D à la première personne et en VR, consoles IOS / VRP / PC par modèle, clavier 3D, missions guidées.
 
 **Jalon.** v1.0 le 18 déc, remise le 20 déc
 
@@ -14,12 +14,13 @@
 | 79 | Préparer le poste de soutenance (émulateur testé) et un plan B (vidéo locale si pas de réseau). | (hors dépôt) | 3 |
 | 92 | Demande du superviseur — VR en WebGPU (voie native, pont pour émulateur, repli WebGL 2), manettes du pont, second panneau VR (Étape, Fiche, Diagnostic), tolérance de visée ; garde-fou contre les boucles entre switchs. | src/xr/gpuBridge.js, src/xr/session.js, src/xr/controllers.js, src/xr/vrInfoPanel.js, docs/vr-webgpu.md | 4 |
 | 93 | Demande du superviseur — vérification HTTPS / TLS du site publié, après chaque déploiement et chaque lundi en CI ; fichier ATTRIBUTION. | tools/verify-https.mjs, tests/verify-https.test.js, .github/workflows/ci.yml, ATTRIBUTION.md | 2 |
+| 100 | Demande du superviseur — laboratoire en VR : salle à l'échelle réelle, téléportation au sol, rotation par crans, console en VR avec clavier 3D et raccourcis de commandes, ajout d'équipements depuis l'étagère et câblage à la manette. Vérifié dans l'émulateur avec WebGPU (aucun contexte WebGL). | src/xr/vrConsole.js, src/xr/controllers.js, src/xr/session.js | 5 |
 
-Total : **10 points**.
+Total : **15 points**.
 
 ## Ce que contient ce dossier
 
-`depot/` — **15 fichiers** à copier dans le dépôt, rangés exactement comme dans le dépôt :
+`depot/` — **16 fichiers** à copier dans le dépôt, rangés exactement comme dans le dépôt :
 
 | Fichier | État | Tâche |
 | --- | --- | --- |
@@ -34,6 +35,7 @@ Total : **10 points**.
 | `src/xr/gpuBridge.js` | nouveau | n° 92 |
 | `src/xr/index.js` | modifié | n° 92 |
 | `src/xr/session.js` | modifié | n° 92 |
+| `src/xr/vrConsole.js` | nouveau | n° 100 |
 | `src/xr/vrInfoPanel.js` | nouveau | n° 92 |
 | `tests/verify-https.test.js` | nouveau | n° 93 |
 | `tools/verify-https.mjs` | nouveau | n° 93 |
@@ -67,7 +69,7 @@ git status
 
 PowerShell (au lieu de `cp`) : `Copy-Item ..\Ayoub\S7\depot\* . -Recurse -Force`
 
-`git status` doit lister exactement les 15 fichiers du tableau ci-dessus.
+`git status` doit lister exactement les 16 fichiers du tableau ci-dessus.
 
 ### 3. Vérifier
 
@@ -76,7 +78,7 @@ npm test
 npm start        # puis ouvrir http://localhost:8080 ; Ctrl+C pour arrêter
 ```
 
-Après `git push origin v1.0` : l'onglet Actions lance « Release » et la page Releases propose l'archive du site. Superviseur : avec l'émulateur, « Entrer en VR » affiche « VR WebGPU (pont pour émulateur) » ; le panneau de droite (Étape, Fiche, Diagnostic) répond à la gâchette. `node tools/verify-https.mjs https://<compte>.github.io/<dépôt>/` affiche le tableau TLS ; le workflow CI a un travail « Vérification HTTPS / TLS ».
+Après `git push origin v1.0` : l'onglet Actions lance « Release » et la page Releases propose l'archive du site. Superviseur : avec l'émulateur, « Entrer en VR » affiche « VR WebGPU (pont pour émulateur) » ; le panneau de droite (Étape, Fiche, Diagnostic) répond à la gâchette. `node tools/verify-https.mjs https://<compte>.github.io/<dépôt>/` affiche le tableau TLS ; le workflow CI a un travail « Vérification HTTPS / TLS ». Laboratoire en VR (Immersive Web Emulator) : on entre dans la salle, la gâchette sur le sol téléporte, sur un équipement ouvre sa console et son clavier 3D.
 
 ### 4. Un commit par tâche
 
@@ -89,6 +91,9 @@ git commit -m "S7 n°92 : VR en WebGPU et panneau VR d'informations"
 
 git add .github/workflows/ci.yml ATTRIBUTION.md docs/lancement-deploiement.md tests/verify-https.test.js tools/verify-https.mjs
 git commit -m "S7 n°93 : vérification HTTPS/TLS et ATTRIBUTION"
+
+git add src/xr/vrConsole.js
+git commit -m "S7 n°100 : laboratoire en VR : téléportation, console et clavier 3D"
 ```
 
 `git status` doit ensuite afficher « nothing to commit, working tree clean ».
@@ -128,5 +133,5 @@ L'étiquette déclenche le workflow « Release » : il relance les tests et cré
 
 Dans cet ordre, les tests passent et l'application démarre après chaque fusion. Un test qui dépend de la partie d'un autre, pas encore fusionnée, s'affiche « skipped » : il s'activera tout seul. Attends que Khalil et Aziz aient fusionné, puis mets ta branche à jour avant de fusionner : `git pull --rebase origin main` puis `git push --force-with-lease`.
 
-À la fin de la semaine, une fois les parties de chacun fusionnées, `npm test` annonce **122 tests réussis**.
+À la fin de la semaine, une fois les parties de chacun fusionnées, `npm test` annonce **148 tests réussis**.
 

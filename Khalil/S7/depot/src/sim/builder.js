@@ -11,13 +11,13 @@
 
 import { intToIp, ipToInt, isIp, networkOf } from './addr.js';
 import { DEFAULT_MODEL, MODELS, portNames } from './catalog.js';
-import { analyse, applyFix, diagnose, freeAddress } from './diagnostic.js';
+import { analyse, applyFix, diagnose, freeAddress, isRouting } from './diagnostic.js';
 import { parseEndpoint, validateScenario } from './scenario.js';
 
 /** Protocoles chargés pour un réseau construit à la main : tout ce que l'on peut jouer. */
 export const BUILD_PROTOCOLS = Object.freeze(['arp', 'icmp', 'udp', 'tcp', 'dns', 'dhcp', 'http']);
-const PREFIX = { host: 'pc', server: 'srv', switch: 'sw', router: 'r' };
-const LABEL = { host: 'PC', server: 'SRV', switch: 'SW', router: 'R' };
+const PREFIX = { host: 'pc', server: 'srv', switch: 'sw', router: 'r', firewall: 'fw' };
+const LABEL = { host: 'PC', server: 'SRV', switch: 'SW', router: 'R', firewall: 'FW' };
 /** Distance minimale entre deux équipements posés automatiquement. */
 const SPACING = 4;
 
@@ -327,7 +327,7 @@ export function setService(draft, id, role, enabled) {
     const end = Math.min(start + 20, size - 2);
     const view = analyse(next);
     const domain = view.domainOf(def.id, own.name);
-    const router = view.addressed.find((entry) => entry.def.type === 'router' && entry.domain === domain);
+    const router = view.addressed.find((entry) => isRouting(entry.def) && entry.domain === domain);
     def.services.dhcp = { start: intToIp(base + start), end: intToIp(base + end), prefix: own.prefix, lease: 3600 };
     if (router) def.services.dhcp.gateway = router.iface.ip;
     const dns = next.devices.find((other) => other.services && other.services.dns);
@@ -344,7 +344,7 @@ export function suggestAddress(draft, id, ifaceName) {
   const neighbour = view.addressed.find((entry) => entry.domain === domain && !(entry.def.id === id && entry.iface.name === ifaceName));
   if (neighbour) {
     const prefix = neighbour.iface.prefix;
-    if (def.type === 'router') {
+    if (isRouting(def)) {
       // Un routeur prend de préférence la première adresse du réseau (.1), habitude courante.
       const first = intToIp(ipToInt(networkOf(neighbour.iface.ip, prefix)) + 1);
       if (!view.addressed.some((entry) => entry.iface.ip === first)) return { ip: first, prefix };
@@ -353,7 +353,7 @@ export function suggestAddress(draft, id, ifaceName) {
     return ip ? { ip, prefix } : null;
   }
   const network = freeNetwork(draft);
-  return { ip: intToIp(ipToInt(network) + (def.type === 'router' ? 1 : 10)), prefix: 24 };
+  return { ip: intToIp(ipToInt(network) + (isRouting(def) ? 1 : 10)), prefix: 24 };
 }
 
 /** Premier réseau 192.168.N.0/24 que personne n'utilise. */
@@ -369,7 +369,7 @@ export function suggestGateway(draft, id) {
   const view = analyse(draft);
   const mine = view.addressed.find((entry) => entry.def.id === id);
   if (!mine) return null;
-  const router = view.addressed.find((entry) => entry.def.type === 'router' && entry.domain === mine.domain && entry.network === mine.network);
+  const router = view.addressed.find((entry) => isRouting(entry.def) && entry.domain === mine.domain && entry.network === mine.network);
   return router ? router.iface.ip : null;
 }
 
@@ -406,7 +406,7 @@ export function autoAddress(draft) {
     if (existing) {
       prefix = existing.iface.prefix;
       base = ipToInt(networkOf(existing.iface.ip, prefix));
-    } else if (members.every((m) => m.def.type === 'router') && members.length === 2) {
+    } else if (members.every((m) => isRouting(m.def)) && members.length === 2) {
       do { transit += 4; } while (next.devices.some((def) => (def.interfaces || []).some((iface) => iface.ip && networkOf(iface.ip, 30) === intToIp(ipToInt('10.0.0.0') + transit))));
       base = ipToInt('10.0.0.0') + transit;
       prefix = 30;
@@ -425,10 +425,10 @@ export function autoAddress(draft) {
       }
       return null;
     };
-    const ordered = [...members].sort((x, y) => (x.def.type === 'router' ? 0 : 1) - (y.def.type === 'router' ? 0 : 1));
+    const ordered = [...members].sort((x, y) => (isRouting(x.def) ? 0 : 1) - (isRouting(y.def) ? 0 : 1));
     for (const member of ordered) {
       if (member.iface.ip) continue;
-      const ip = take(member.def.type === 'router' ? 1 : (prefix >= 30 ? 1 : 10));
+      const ip = take(isRouting(member.def) ? 1 : (prefix >= 30 ? 1 : 10));
       if (!ip) continue;
       member.iface.ip = ip;
       member.iface.prefix = prefix;

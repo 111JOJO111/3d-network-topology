@@ -3,9 +3,10 @@
 
 import { isIp, isMac } from './addr.js';
 import { CABLES, ETHERNET_SPEEDS, MODELS } from './catalog.js';
+import { checkRule } from './security.js';
 
 export const SCENARIO_FORMAT = 1;
-export const DEVICE_TYPES = Object.freeze(['host', 'server', 'switch', 'router']);
+export const DEVICE_TYPES = Object.freeze(['host', 'server', 'switch', 'router', 'firewall']);
 
 const isText = (value) => !!value && typeof value.fr === 'string' && typeof value.en === 'string';
 
@@ -47,7 +48,23 @@ export function validateScenario(scenario) {
     for (const [j, iface] of (device.interfaces || []).entries()) {
       const at = `${where}.interfaces[${j}]`;
       if (!iface.name) fail(`${at}.name manquant`);
-      if (device.type !== 'switch') {
+      // Une sous-interface (« g0/0.10 ») partage l'adresse MAC de son interface physique.
+      const subif = iface.name && iface.name.includes('.');
+      if (subif) {
+        const parent = iface.name.split('.')[0];
+        if (!(device.interfaces || []).some((other) => other.name === parent)) fail(`${at} : interface physique « ${parent} » absente`);
+        // Sans VLAN, la sous-interface existe mais ne reçoit rien (comme avant « encapsulation dot1Q »).
+        if (iface.vlan != null && (!Number.isInteger(iface.vlan) || iface.vlan < 1 || iface.vlan > 4094)) fail(`${at}.vlan : numéro de 1 à 4094`);
+        if (iface.ip != null && (!isIp(iface.ip) || !Number.isInteger(iface.prefix) || iface.prefix < 1 || iface.prefix > 30)) fail(`${at} : ip et prefix attendus`);
+      }
+      if (iface.nat != null && !['inside', 'outside'].includes(iface.nat)) fail(`${at}.nat : inside ou outside`);
+      if (iface.acl != null) {
+        for (const dir of ['in', 'out']) {
+          if (iface.acl[dir] != null && !(device.acls && device.acls[iface.acl[dir]])) fail(`${at}.acl.${dir} : liste « ${iface.acl[dir]} » absente de acls`);
+        }
+      }
+      if (iface.zone != null && typeof iface.zone !== 'string') fail(`${at}.zone : texte attendu`);
+      if (device.type !== 'switch' && !subif) {
         if (!isMac(iface.mac)) fail(`${at}.mac invalide`);
         else if (macs.has(iface.mac.toUpperCase())) fail(`${at}.mac « ${iface.mac} » en double`);
         else macs.add(iface.mac.toUpperCase());
@@ -71,6 +88,32 @@ export function validateScenario(scenario) {
     for (const [j, route] of (device.routes || []).entries()) {
       if (!isIp(route.network) || !Number.isInteger(route.prefix) || !isIp(route.via)) {
         fail(`${where}.routes[${j}] : { network, prefix, via } attendu`);
+      }
+    }
+    // Laboratoire : listes d'accès, NAT, VLAN et réglages des ports de switch.
+    for (const [name, rules] of Object.entries(device.acls || {})) {
+      if (!Array.isArray(rules)) { fail(`${where}.acls.${name} : liste de règles attendue`); continue; }
+      rules.forEach((rule, j) => { const problem = checkRule(rule); if (problem) fail(`${where}.acls.${name}[${j}] : ${problem}`); });
+    }
+    for (const [j, rule] of (device.nat || []).entries()) {
+      if (rule.type === 'static') {
+        if (!isIp(rule.inside) || !isIp(rule.outside)) fail(`${where}.nat[${j}] : inside et outside (adresses) attendus`);
+      } else if (rule.type === 'overload') {
+        if (rule.acl != null && !(device.acls && device.acls[rule.acl])) fail(`${where}.nat[${j}].acl : liste « ${rule.acl} » absente`);
+      } else fail(`${where}.nat[${j}].type : static ou overload`);
+    }
+    for (const id of Object.keys(device.vlans || {})) {
+      if (!(Number(id) >= 1 && Number(id) <= 4094)) fail(`${where}.vlans : numéro « ${id} » hors de 1 à 4094`);
+    }
+    for (const [port, config] of Object.entries(device.ports || {})) {
+      const at = `${where}.ports.${port}`;
+      if (config.mode != null && !['access', 'trunk'].includes(config.mode)) fail(`${at}.mode : access ou trunk`);
+      if (config.vlan != null && !(Number.isInteger(config.vlan) && config.vlan >= 1 && config.vlan <= 4094)) fail(`${at}.vlan : 1 à 4094`);
+      if (config.allowed != null && !(Array.isArray(config.allowed) && config.allowed.every((v) => Number.isInteger(v)))) fail(`${at}.allowed : liste de VLAN`);
+      if (config.security != null) {
+        const sec = config.security;
+        if (sec.violation != null && !['shutdown', 'restrict', 'protect'].includes(sec.violation)) fail(`${at}.security.violation : shutdown, restrict ou protect`);
+        if (sec.macs != null && !(Array.isArray(sec.macs) && sec.macs.every(isMac))) fail(`${at}.security.macs : adresses MAC attendues`);
       }
     }
   }

@@ -21,6 +21,7 @@ Rien à installer : un navigateur récent suffit, sur PC ou sur smartphone.
 - **Débit** : vitesse négociée de chaque lien, temps d'émission des trames, files d'attente, pertes, transferts TCP à fenêtre glissante avec retransmissions ; câbles colorés selon leur charge ; fiche technique des équipements.
 - **Diagnostic** : adresses, passerelles, routes, câblage et performances vérifiés, avec la cause, le conseil et une correction en un clic.
 - **Éditeur** : construire sa propre topologie (ajout, glisser-déposer, câblage, réglages, adressage automatique), l'enregistrer, l'exporter en JSON, annuler / rétablir.
+- **Laboratoire** : entrer dans une salle à la première personne (ou en VR à l'échelle réelle), viser un équipement et ouvrir sa **console** ; chaque modèle a sa fiche et son style de commandes (IOS, VRP, invite de commandes) ; VLAN, sécurité de port, ACL, NAT et pare-feu à états ; clavier 3D et téléportation en VR ; six **missions** guidées vérifiées automatiquement.
 
 | Débit et fiche technique | Diagnostic | Éditeur |
 | --- | --- | --- |
@@ -50,7 +51,7 @@ Ouvrir `index.html` par un double-clic ne fonctionne pas (les modules JavaScript
 | [Simulation](docs/simulation.md) · [Rendu 3D](docs/rendu-3d.md) | fonctionnement détaillé des deux moteurs |
 | [Contrats communs](docs/contrats.md) · [Format des scénarios](docs/format-scenario.md) · [API de rendu](docs/api-rendu.md) | interfaces entre les parties |
 | [Protocoles](docs/protocoles/) | une page par protocole, avec ses simplifications pédagogiques |
-| [Débit](docs/debit.md) · [Diagnostic](docs/diagnostic.md) · [Éditeur](docs/editeur.md) · [VR en WebGPU](docs/vr-webgpu.md) | compléments demandés par le superviseur (S5 à S7) |
+| [Débit](docs/debit.md) · [Diagnostic](docs/diagnostic.md) · [Éditeur](docs/editeur.md) · [VR en WebGPU](docs/vr-webgpu.md) · [Laboratoire](docs/laboratoire.md) · [Consoles](docs/console.md) | compléments demandés par le superviseur (S5 à S7) |
 | [Origine des ressources](ATTRIBUTION.md) | bibliothèques, modèles, données et aides extérieures |
 
 ## Organisation du dépôt

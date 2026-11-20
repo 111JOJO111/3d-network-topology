@@ -2,7 +2,7 @@
 
 **Objectif du sprint.** Tester, corriger, faire marcher l'appli sans internet et écrire la documentation. Ajouts demandés par le superviseur : diagnostic du réseau, fiche technique, scénarios ARP et traceroute.
 
-**Résultat attendu le dimanche.** Un membre qui n'a pas codé la démo la rejoue entièrement sans aide. Version v1.0-rc taguée.
+**Résultat attendu le dimanche.** Un membre qui n'a pas codé la démo la rejoue entièrement sans aide. Version v1.0-rc taguée. Laboratoire, côté moteur : VLAN, sécurité de port, ACL, NAT et pare-feu à états, avec leurs scénarios.
 
 **Jalon.** Gel des fonctionnalités (13 déc)
 
@@ -13,18 +13,23 @@
 | 69 | Mettre en cache tous les fichiers et tester l'appli sans internet sur GitHub Pages. | sw.js | 3 |
 | 70 | Lancer un audit Lighthouse (qualité PWA) et noter les résultats. | docs/ | 1 |
 | 71 | Documenter le lancement en local et le déploiement. | docs/ | 2 |
+| 95 | Demande du superviseur — laboratoire : switch administrable. Ports d'accès et trunk étiquetés 802.1Q, table MAC par VLAN, sécurité de port (maximum, sticky, violation shutdown / restrict / protect). Scénarios VLAN et Sécurité de port, ajoutés au catalogue. | src/sim/devices/switch.js, scenarios/securite-port.json, scenarios/vlan.json, scenarios/index.json | 3 |
 
-Total : **6 points**.
+Total : **9 points**.
 
 ## Ce que contient ce dossier
 
-`depot/` — **3 fichiers** à copier dans le dépôt, rangés exactement comme dans le dépôt :
+`depot/` — **7 fichiers** à copier dans le dépôt, rangés exactement comme dans le dépôt :
 
 | Fichier | État | Tâche |
 | --- | --- | --- |
 | `docs/lancement-deploiement.md` | nouveau | n° 71 |
 | `docs/lighthouse.md` | nouveau | n° 70 |
+| `scenarios/securite-port.json` | nouveau | n° 95 |
+| `scenarios/vlan.json` | nouveau | n° 95 |
+| `src/sim/devices/switch.js` | modifié | n° 95 |
 | `sw.js` | modifié | n° 69 |
+| `scenarios/index.json` | modifié — fichier partagé, dernière modification par Ramy | n° 95 |
 
 « nouveau » : le fichier n'existait pas. « modifié » : il remplace la version de la semaine précédente (c'est le fichier complet, pas un correctif).
 
@@ -50,7 +55,7 @@ git status
 
 PowerShell (au lieu de `cp`) : `Copy-Item ..\Ayoub\S6\depot\* . -Recurse -Force`
 
-`git status` doit lister exactement les 3 fichiers du tableau ci-dessus.
+`git status` doit lister exactement les 7 fichiers du tableau ci-dessus.
 
 ### 3. Vérifier
 
@@ -59,7 +64,7 @@ npm test
 npm start        # puis ouvrir http://localhost:8080 ; Ctrl+C pour arrêter
 ```
 
-Sur le site déployé : Application → Cache storage contient `3dnt-…` ; Network → Offline puis F5 : l'application se recharge. Remplir docs/lighthouse.md.
+Sur le site déployé : Application → Cache storage contient `3dnt-…` ; Network → Offline puis F5 : l'application se recharge. Remplir docs/lighthouse.md. Laboratoire : le scénario « Sécurité de port » coupe le port de l'intrus (câble rouge foncé à partir de la version d'Aziz).
 
 ### 4. Un commit par tâche
 
@@ -72,6 +77,9 @@ git commit -m "S6 n°70 : fiche d'audit Lighthouse"
 
 git add docs/lancement-deploiement.md
 git commit -m "S6 n°71 : documentation du lancement local et du déploiement"
+
+git add scenarios/securite-port.json scenarios/vlan.json src/sim/devices/switch.js scenarios/index.json
+git commit -m "S6 n°95 : laboratoire : switch administrable (VLAN, sécurité de port) et ses scénarios"
 ```
 
 `git status` doit ensuite afficher « nothing to commit, working tree clean ».
@@ -105,9 +113,13 @@ git push origin v1.0-rc
 
 ## Ordre de fusion conseillé cette semaine
 
-1. Aziz  →  2. Khalil  →  3. **Ayoub (toi)**  →  4. Ramy
+1. Khalil  →  2. Aziz  →  3. **Ayoub (toi)**  →  4. Ramy
 
-Dans cet ordre, les tests passent et l'application démarre après chaque fusion. Un test qui dépend de la partie d'un autre, pas encore fusionnée, s'affiche « skipped » : il s'activera tout seul. Attends que Aziz et Khalil aient fusionné, puis mets ta branche à jour avant de fusionner : `git pull --rebase origin main` puis `git push --force-with-lease`.
+Dans cet ordre, les tests passent et l'application démarre après chaque fusion. Un test qui dépend de la partie d'un autre, pas encore fusionnée, s'affiche « skipped » : il s'activera tout seul. Attends que Khalil et Aziz aient fusionné, puis mets ta branche à jour avant de fusionner : `git pull --rebase origin main` puis `git push --force-with-lease`.
 
-À la fin de la semaine, une fois les parties de chacun fusionnées, `npm test` annonce **109 tests réussis**.
+À la fin de la semaine, une fois les parties de chacun fusionnées, `npm test` annonce **121 tests réussis**.
+
+## Attention : fichier partagé
+
+`scenarios/index.json` fait partie des contrats communs : la pull request doit être **approuvée par les quatre**. La version fournie ici est celle de la fin de la semaine, toutes parties fusionnées.
 

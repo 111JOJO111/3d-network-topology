@@ -73,6 +73,7 @@ export const MODELS = Object.freeze({
     ports: [{ prefix: 'g0/', from: 0, count: 2, speed: 1000 }],
     routing: 1000,
     power: 40,
+    os: 'netcore',
   },
   'rt-4g': {
     type: 'router', name: 'Routeur RX-4G',
@@ -80,11 +81,81 @@ export const MODELS = Object.freeze({
     ports: [{ prefix: 'g0/', from: 0, count: 4, speed: 1000 }],
     routing: 4000,
     power: 90,
+    os: 'netcore',
+  },
+  // --- Laboratoire (S6) : équipements administrables, avec une console.
+  'sw-24m': {
+    type: 'switch', name: 'Commutateur administrable CX-24M',
+    description: {
+      fr: 'Switch d\'accès administrable : 24 ports Gigabit et 2 ports montants 10 Gb/s. Sa console (style IOS) permet de créer des VLAN, de passer un port en accès ou en trunk 802.1Q, de sécuriser un port (adresses MAC autorisées, apprentissage « sticky ») et de lire sa table MAC. C\'est le switch typique d\'une salle de cours ou d\'un étage de bureaux.',
+      en: 'Managed access switch: 24 Gigabit ports and 2 10 Gb/s uplinks. Its console (IOS style) creates VLANs, sets ports to access or 802.1Q trunk, secures a port (allowed MAC addresses, sticky learning) and shows its MAC table. The typical switch of a classroom or an office floor.',
+    },
+    ports: [{ prefix: 'p', from: 1, count: 24, speed: 1000 }, { prefix: 'u', from: 1, count: 2, speed: 10000 }],
+    macTable: 16384, vlans: 1024,
+    power: 30, os: 'netcore',
+  },
+  'sw-24v': {
+    type: 'switch', name: 'Commutateur administrable VS-24',
+    description: {
+      fr: 'Switch administrable de la gamme Versa : 24 ports Gigabit et 2 ports 10 Gb/s. Mêmes possibilités que le CX-24M (VLAN, trunk, sécurité des ports), mais sa console suit le style VRP (system-view, display…) : utile pour s\'entraîner aux deux familles de commandes.',
+      en: 'Managed switch of the Versa range: 24 Gigabit ports and 2 10 Gb/s ports. Same features as the CX-24M (VLANs, trunks, port security), but its console follows the VRP style (system-view, display…): handy to practise both command families.',
+    },
+    ports: [{ prefix: 'p', from: 1, count: 24, speed: 1000 }, { prefix: 'u', from: 1, count: 2, speed: 10000 }],
+    macTable: 16384, vlans: 4094,
+    power: 32, os: 'versa',
+  },
+  'rt-2v': {
+    type: 'router', name: 'Routeur VR-2',
+    description: {
+      fr: 'Routeur d\'agence de la gamme Versa, 2 interfaces Gigabit, console de style VRP. Routage statique, sous-interfaces 802.1Q (routage entre VLAN), listes d\'accès et NAT.',
+      en: 'Versa branch router, 2 Gigabit interfaces, VRP-style console. Static routing, 802.1Q sub-interfaces (inter-VLAN routing), access lists and NAT.',
+    },
+    ports: [{ prefix: 'g0/0/', from: 0, count: 2, speed: 1000 }],
+    routing: 2000,
+    power: 45, os: 'versa',
+  },
+  'fw-3g': {
+    type: 'firewall', name: 'Pare-feu SG-3',
+    description: {
+      fr: 'Pare-feu à états pour une petite entreprise : 3 interfaces Gigabit, une par zone (inside, outside, dmz). Ce qui part de l\'intérieur peut revenir ; ce qui arrive d\'Internet est bloqué sauf règle explicite. Fait aussi le NAT pour partager une adresse publique.',
+      en: 'Stateful firewall for a small company: 3 Gigabit interfaces, one per zone (inside, outside, dmz). What leaves from inside may come back; what arrives from the Internet is blocked unless a rule allows it. Also does NAT to share one public address.',
+    },
+    ports: [{ prefix: 'g0/', from: 0, count: 3, speed: 1000 }],
+    routing: 1000, sessions: 50000,
+    power: 25, os: 'shield',
+  },
+  'fw-8g': {
+    type: 'firewall', name: 'Pare-feu SG-8X',
+    description: {
+      fr: 'Pare-feu de site : 8 interfaces Gigabit pour séparer plusieurs zones (bureaux, serveurs, invités, Internet) et beaucoup plus de sessions simultanées que le SG-3.',
+      en: 'Site firewall: 8 Gigabit interfaces to separate several zones (offices, servers, guests, Internet) and many more simultaneous sessions than the SG-3.',
+    },
+    ports: [{ prefix: 'g0/', from: 0, count: 8, speed: 1000 }],
+    routing: 8000, sessions: 500000,
+    power: 60, os: 'shield',
   },
 });
 
 /** Modèle utilisé quand le scénario n'en précise pas. */
-export const DEFAULT_MODEL = Object.freeze({ host: 'pc-std', server: 'srv-1g', switch: 'sw-8g', router: 'rt-2g' });
+export const DEFAULT_MODEL = Object.freeze({ host: 'pc-std', server: 'srv-1g', switch: 'sw-8g', router: 'rt-2g', firewall: 'fw-3g' });
+
+/**
+ * Systèmes d'exploitation (fictifs) des équipements administrables, et le style de leurs
+ * commandes : « ios » ressemble à Cisco IOS (enable, configure terminal, show…), « vrp »
+ * à Huawei VRP (system-view, display…). Voir src/sim/cli.js.
+ */
+export const SYSTEMS = Object.freeze({
+  'netcore': { name: 'NetCore OS 15', dialect: 'ios' },
+  'versa': { name: 'Versa NOS 8', dialect: 'vrp' },
+  'shield': { name: 'Shield OS 9', dialect: 'ios' },
+  'desk': { name: 'Bureau (invite de commandes)', dialect: 'pc' },
+});
+
+/** Système d'un équipement : celui de son modèle ; un PC ou un serveur a une invite de commandes. */
+export function systemOf(def) {
+  const model = modelOf(def);
+  return SYSTEMS[(model && model.os) || (def.type === 'host' || def.type === 'server' ? 'desk' : 'netcore')];
+}
 
 /**
  * Câbles. `max` : vitesse maximale (Mb/s) ; `long` : vitesse au-delà de `shortUntil` mètres

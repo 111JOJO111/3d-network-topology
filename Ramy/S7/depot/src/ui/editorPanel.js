@@ -10,7 +10,7 @@
 // équipements les câble ; cliquer un équipement ouvre ses réglages ici.
 
 import { Topics } from '../sim/events.js';
-import { CABLES, DEFAULT_CABLE, MODELS, formatSpeed, modelsOfType } from '../sim/catalog.js';
+import { CABLES, DEFAULT_CABLE, MODELS, SYSTEMS, formatSpeed, modelsOfType } from '../sim/catalog.js';
 import { diagnose } from '../sim/diagnostic.js';
 import * as B from '../sim/builder.js';
 import { el } from './dom.js';
@@ -27,7 +27,8 @@ registerStrings({
     'ed.undo': 'Annuler', 'ed.redo': 'Rétablir', 'ed.auto': 'Adressage automatique', 'ed.export': 'Exporter (JSON)', 'ed.import': 'Importer (JSON)',
     'ed.save': 'Enregistrer sous…', 'ed.saveName': 'Nom du réseau', 'ed.quit': 'Quitter l\'éditeur',
     'ed.add': 'Ajouter un équipement', 'ed.model': 'Modèle',
-    'ed.type.host': 'PC', 'ed.type.server': 'Serveur', 'ed.type.switch': 'Switch', 'ed.type.router': 'Routeur',
+    'ed.type.host': 'PC', 'ed.type.server': 'Serveur', 'ed.type.switch': 'Switch', 'ed.type.router': 'Routeur', 'ed.type.firewall': 'Pare-feu',
+    'ed.os': 'Système : {os} (commandes de style {dialect})', 'ed.noOs': 'Non administrable : pas de console.', 'ed.console': 'Console de {name}',
     'ed.link': 'Relier deux équipements', 'ed.linkOn': 'Cliquez le premier équipement…', 'ed.linkSecond': '{name} choisi : cliquez le second équipement.',
     'ed.linkOff': 'Outil « Relier »', 'ed.cable': 'Câble',
     'ed.hintDrag': 'Astuce : glissez un équipement dans la scène pour le déplacer.',
@@ -56,7 +57,8 @@ registerStrings({
     'ed.undo': 'Undo', 'ed.redo': 'Redo', 'ed.auto': 'Automatic addressing', 'ed.export': 'Export (JSON)', 'ed.import': 'Import (JSON)',
     'ed.save': 'Save as…', 'ed.saveName': 'Network name', 'ed.quit': 'Leave the editor',
     'ed.add': 'Add a device', 'ed.model': 'Model',
-    'ed.type.host': 'PC', 'ed.type.server': 'Server', 'ed.type.switch': 'Switch', 'ed.type.router': 'Router',
+    'ed.type.host': 'PC', 'ed.type.server': 'Server', 'ed.type.switch': 'Switch', 'ed.type.router': 'Router', 'ed.type.firewall': 'Firewall',
+    'ed.os': 'System: {os} ({dialect}-style commands)', 'ed.noOs': 'Unmanaged: no console.', 'ed.console': '{name} console',
     'ed.link': 'Connect two devices', 'ed.linkOn': 'Click the first device…', 'ed.linkSecond': '{name} chosen: click the second device.',
     'ed.linkOff': '"Connect" tool', 'ed.cable': 'Cable',
     'ed.hintDrag': 'Tip: drag a device in the scene to move it.',
@@ -81,7 +83,7 @@ registerStrings({
 const DRAFT_KEY = 'ntopo.editor.draft';
 const SAVES_KEY = 'ntopo.editor.saves';
 const ACTIONS = ['ping', 'tcp', 'udp', 'dns', 'http', 'dhcp'];
-const TYPES = ['host', 'server', 'switch', 'router'];
+const TYPES = ['host', 'server', 'switch', 'router', 'firewall'];
 
 // Le stockage du navigateur peut être absent ou refusé (navigation privée, iframe) :
 // on ne plante jamais, on prévient une fois.
@@ -247,11 +249,23 @@ export function initEditorPanel(app, slot = document.getElementById('editor')) {
     toast(t('ed.savedAs', { name }));
   }
 
+  /** Fiche d'un modèle : description, ports, système et style de commandes. */
+  function modelCard(id) {
+    const model = MODELS[id];
+    if (!model) return null;
+    const ports = model.ports.map((g) => `${g.count}×${formatSpeed(g.speed)}`).join(' + ');
+    const os = model.os ? SYSTEMS[model.os] : (model.type === 'host' || model.type === 'server') ? SYSTEMS.desk : null;
+    return el('div', { class: 'ed-model-card' },
+      el('strong', {}, model.name), el('span', { class: 'muted small' }, ` · ${ports}`),
+      el('p', { class: 'small' }, localize(model.description)),
+      el('p', { class: 'muted small' }, !os ? t('ed.noOs') : os.dialect === 'pc' ? os.name : t('ed.os', { os: os.name, dialect: os.dialect.toUpperCase() })));
+  }
+
   function palette() {
     return [
       el('h3', { class: 'sub-title' }, t('ed.add')),
       el('div', { class: 'ed-palette' }, TYPES.map((type) => el('div', { class: 'ed-add' },
-        select(modelsOfType(type).map((m) => [m.id, `${m.name}`]), addModel[type], (value) => { addModel[type] = value; }),
+        select(modelsOfType(type).map((m) => [m.id, `${m.name}`]), addModel[type], (value) => { addModel[type] = value; paint(); }),
         el('button', { type: 'button', class: `btn btn-add tag-${type}`, id: `ed-add-${type}`, onclick: () => {
           let created = null;
           change((d) => {
@@ -261,7 +275,8 @@ export function initEditorPanel(app, slot = document.getElementById('editor')) {
             return result.draft;
           });
           if (created) selected = created; // sélectionné dès que le brouillon est rechargé
-        } }, '+ ', t('ed.type.' + type))))),
+        } }, '+ ', t('ed.type.' + type)),
+        modelCard(addModel[type])))),
       el('h3', { class: 'sub-title' }, t('ed.link')),
       el('div', { class: 'ed-row' },
         el('button', { type: 'button', id: 'ed-link', class: `btn ${linking ? 'btn-primary' : ''}`, 'aria-pressed': String(!!linking),
@@ -282,7 +297,8 @@ export function initEditorPanel(app, slot = document.getElementById('editor')) {
       button('ed.apply', () => change((x) => B.updateDevice(x, def.id, { name: name.value })))));
     parts.push(field('ed.model', select(modelsOfType(def.type).map((m) => [m.id, `${m.name} — ${m.ports.map((g) => `${g.count}×${formatSpeed(g.speed)}`).join(' + ')}`]),
       def.model || '', (value) => change((x) => B.updateDevice(x, def.id, { model: value })))));
-    if (MODELS[def.model]) parts.push(el('p', { class: 'muted small' }, localize(MODELS[def.model].description)));
+    if (MODELS[def.model]) parts.push(modelCard(def.model));
+    if (app.terminals) parts.push(el('button', { type: 'button', class: 'btn btn-primary btn-wide', id: 'ed-console', onclick: () => app.terminals.open(def.id) }, '>_ ', t('ed.console', { name: def.name })));
 
     // Adresses
     if (def.type !== 'switch') {

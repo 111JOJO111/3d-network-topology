@@ -10,6 +10,9 @@
     { "file": "http.json", "title": { "fr": "HTTP : charger une page web", "en": "HTTP: loading a web page" } },
     { "file": "routage.json", "title": { "fr": "Routage statique et TTL", "en": "Static routing and TTL" } },
     { "file": "traceroute.json", "title": { "fr": "Traceroute : découvrir le chemin routeur par routeur", "en": "Traceroute: discovering the path router by router" } },
+    { "file": "vlan.json", "title": { "fr": "VLAN : deux réseaux sur le même switch", "en": "VLANs: two networks on the same switch" } },
+    { "file": "pare-feu.json", "title": { "fr": "Pare-feu et NAT : sortir sur Internet, rester protégé", "en": "Firewall and NAT: going online while staying protected" } },
+    { "file": "securite-port.json", "title": { "fr": "Sécurité des ports : un intrus sur la prise réseau", "en": "Port security: an intruder on the network socket" } },
     { "file": "debit.json", "title": { "fr": "Débit : liens lents, partage et pertes", "en": "Throughput: slow links, sharing and losses" } },
     { "file": "diagnostic.json", "title": { "fr": "Diagnostic : un réseau mal configuré à réparer", "en": "Diagnostic: a misconfigured network to repair" } },
     { "file": "topologie-demo.json", "title": { "fr": "Topologie de démonstration", "en": "Demo topology" } }

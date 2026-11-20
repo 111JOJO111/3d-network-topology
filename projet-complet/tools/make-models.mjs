@@ -2,7 +2,7 @@
 // Aucun logiciel de modélisation ni dépendance : chaque modèle est un assemblage de
 // boîtes et de cylindres décrit ci-dessous. Quelques kilo-octets par fichier.
 //
-//   node tools/make-models.mjs        -> écrit assets/models/{pc,server,switch,router}.glb
+//   node tools/make-models.mjs        -> écrit assets/models/{pc,server,switch,router,firewall}.glb
 //
 // Convention : origine au sol, au centre ; axe Y vers le haut ; face avant vers +Z.
 
@@ -184,6 +184,17 @@ export const MODELS = {
     part(box([0.08, 0.05, 0.03], [-0.2, 0.2, 0.775]), 0x22c55e, 0x16a34a),
     part(box([0.08, 0.05, 0.03], [0, 0.2, 0.78]), 0x22c55e, 0x16a34a),
     part(box([0.08, 0.05, 0.03], [0.2, 0.2, 0.775]), 0x38bdf8, 0x0284c7),
+  ],
+  // Pare-feu : boîtier 1U rouge brique, ailettes de refroidissement, 3 ports colorés
+  // par zone (vert inside, rouge outside, orange dmz) et un bouclier en façade.
+  firewall: [
+    part(box([1.7, 0.42, 0.95], [0, 0.21, 0]), 0x7c2d12),
+    part(box([1.7, 0.03, 0.95], [0, 0.435, 0]), 0xea580c),
+    ...Array.from({ length: 6 }, (unused, i) => part(box([0.03, 0.06, 0.8], [-0.6 + i * 0.24, 0.48, 0]), 0x431407)),
+    part(box([0.28, 0.24, 0.02], [-0.55, 0.22, 0.485]), 0xfb923c, 0xc2410c),
+    part(box([0.16, 0.13, 0.02], [0.1, 0.2, 0.485]), 0x22c55e, 0x15803d),
+    part(box([0.16, 0.13, 0.02], [0.35, 0.2, 0.485]), 0xef4444, 0xb91c1c),
+    part(box([0.16, 0.13, 0.02], [0.6, 0.2, 0.485]), 0xf59e0b, 0xb45309),
   ],
 };
 

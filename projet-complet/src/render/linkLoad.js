@@ -21,6 +21,17 @@ export const LOAD_COLORS = Object.freeze({
   busy: 0xf59e0b,
   saturated: 0xef4444,
 });
+/** Câble coupé : une des deux interfaces est éteinte (shutdown) ou bloquée (err-disabled). */
+const DOWN_COLOR = 0x7f1d1d;
+
+/** Le lien est-il coupé ? */
+function isDown(sim, link) {
+  if (!link) return false;
+  return [link.a, link.b].some((end) => {
+    const device = end && sim.device(end.device);
+    return !!(device && device.isDown && device.isDown(end.iface));
+  });
+}
 /** Fréquence de mise à jour des couleurs (ms réelles) : inutile de recalculer à chaque image. */
 const REFRESH = 150;
 const idle = new THREE.Color(LOAD_COLORS.idle);
@@ -61,6 +72,14 @@ export function createLinkLoad(render, sim) {
   }
 
   function paint(entry, load) {
+    if (entry.down) {
+      entry.load = 0;
+      entry.level = 'down';
+      entry.mesh.material.color.setHex(DOWN_COLOR);
+      if (entry.mesh.material.emissive) entry.mesh.material.emissive.setHex(0x000000);
+      entry.mesh.scale.x = entry.mesh.scale.z = 0.6; // câble « mort », plus fin
+      return;
+    }
     entry.load = load;
     entry.level = loadLevel(load);
     const material = entry.mesh.material;
@@ -77,6 +96,7 @@ export function createLinkLoad(render, sim) {
 
   function refresh() {
     const traffic = sim.traffic();
+    for (const [id, entry] of state) entry.down = isDown(sim, sim.link(id));
     for (const [id, entry] of state) paint(entry, traffic && traffic.links[id] ? traffic.links[id].max : 0);
   }
 

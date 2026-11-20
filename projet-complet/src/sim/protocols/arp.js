@@ -56,7 +56,10 @@ function learn(device, net, ip, mac) {
 function receive(device, net, packet, iface) {
   const { arp } = packet;
   if (arp.op === 'request') {
-    if (iface.ip !== arp.targetIp) {
+    // Un routeur ou pare-feu qui fait du NAT statique répond aussi pour l'adresse publique
+    // qu'il traduit (« proxy ARP ») : sinon personne ne recevrait les paquets qui lui sont destinés.
+    const proxied = iface.ip !== arp.targetIp && device.proxyArp && device.proxyArp(arp.targetIp, iface);
+    if (iface.ip !== arp.targetIp && !proxied) {
       return { accepted: false, notes: [note('arp.notForMe', { name: device.name, ip: arp.targetIp })] };
     }
     learn(device, net, arp.senderIp, arp.senderMac);
@@ -64,8 +67,8 @@ function receive(device, net, packet, iface) {
       protocol: 'arp',
       label: 'ARP Reply',
       eth: { src: iface.mac, dst: arp.senderMac, type: 'ARP' },
-      arp: { op: 'reply', senderMac: iface.mac, senderIp: iface.ip, targetMac: arp.senderMac, targetIp: arp.senderIp },
-      explain: note('arp.reply', { name: device.name, ip: iface.ip, mac: iface.mac }),
+      arp: { op: 'reply', senderMac: iface.mac, senderIp: arp.targetIp, targetMac: arp.senderMac, targetIp: arp.senderIp },
+      explain: note('arp.reply', { name: device.name, ip: arp.targetIp, mac: iface.mac }),
     });
     net.transmit(device, iface.name, reply);
     return { accepted: true, notes: [note('arp.learn', { name: device.name, ip: arp.senderIp, mac: arp.senderMac })] };

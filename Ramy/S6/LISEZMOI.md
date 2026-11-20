@@ -2,7 +2,7 @@
 
 **Objectif du sprint.** Tester, corriger, faire marcher l'appli sans internet et écrire la documentation. Ajouts demandés par le superviseur : diagnostic du réseau, fiche technique, scénarios ARP et traceroute.
 
-**Résultat attendu le dimanche.** Un membre qui n'a pas codé la démo la rejoue entièrement sans aide. Version v1.0-rc taguée.
+**Résultat attendu le dimanche.** Un membre qui n'a pas codé la démo la rejoue entièrement sans aide. Version v1.0-rc taguée. Laboratoire, côté moteur : VLAN, sécurité de port, ACL, NAT et pare-feu à états, avec leurs scénarios.
 
 **Jalon.** Gel des fonctionnalités (13 déc)
 
@@ -103,11 +103,11 @@ git branch -d feature/ramy-s6-manuel-diagnostic
 
 ## Ordre de fusion conseillé cette semaine
 
-1. Aziz  →  2. Khalil  →  3. Ayoub  →  4. **Ramy (toi)**
+1. Khalil  →  2. Aziz  →  3. Ayoub  →  4. **Ramy (toi)**
 
-Dans cet ordre, les tests passent et l'application démarre après chaque fusion. Un test qui dépend de la partie d'un autre, pas encore fusionnée, s'affiche « skipped » : il s'activera tout seul. Attends que Aziz et Khalil et Ayoub aient fusionné, puis mets ta branche à jour avant de fusionner : `git pull --rebase origin main` puis `git push --force-with-lease`.
+Dans cet ordre, les tests passent et l'application démarre après chaque fusion. Un test qui dépend de la partie d'un autre, pas encore fusionnée, s'affiche « skipped » : il s'activera tout seul. Attends que Khalil et Aziz et Ayoub aient fusionné, puis mets ta branche à jour avant de fusionner : `git pull --rebase origin main` puis `git push --force-with-lease`.
 
-À la fin de la semaine, une fois les parties de chacun fusionnées, `npm test` annonce **109 tests réussis**.
+À la fin de la semaine, une fois les parties de chacun fusionnées, `npm test` annonce **121 tests réussis**.
 
 ## Attention : fichier partagé
 

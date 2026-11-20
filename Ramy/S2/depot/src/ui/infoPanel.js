@@ -8,7 +8,7 @@ registerStrings({
   fr: {
     'info.title': 'Équipement',
     'info.hint': 'Cliquez (ou touchez) un équipement dans la scène pour afficher ses adresses.',
-    'info.type.host': 'PC', 'info.type.server': 'Serveur', 'info.type.switch': 'Switch', 'info.type.router': 'Routeur',
+    'info.type.host': 'PC', 'info.type.server': 'Serveur', 'info.type.switch': 'Switch', 'info.type.router': 'Routeur', 'info.type.firewall': 'Pare-feu',
     'info.iface': 'Interface', 'info.ip': 'Adresse IP', 'info.mac': 'Adresse MAC',
     'info.noip': 'non configurée', 'info.gateway': 'Passerelle', 'info.dns': 'Serveur DNS',
     'info.ports': 'Ports', 'info.switch': 'Un switch travaille avec les adresses MAC : il n\'a pas d\'adresse IP.',
@@ -19,7 +19,7 @@ registerStrings({
   en: {
     'info.title': 'Device',
     'info.hint': 'Click (or tap) a device in the scene to display its addresses.',
-    'info.type.host': 'PC', 'info.type.server': 'Server', 'info.type.switch': 'Switch', 'info.type.router': 'Router',
+    'info.type.host': 'PC', 'info.type.server': 'Server', 'info.type.switch': 'Switch', 'info.type.router': 'Router', 'info.type.firewall': 'Firewall',
     'info.iface': 'Interface', 'info.ip': 'IP address', 'info.mac': 'MAC address',
     'info.noip': 'not configured', 'info.gateway': 'Gateway', 'info.dns': 'DNS server',
     'info.ports': 'Ports', 'info.switch': 'A switch works with MAC addresses: it has no IP address.',

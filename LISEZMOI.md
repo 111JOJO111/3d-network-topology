@@ -41,17 +41,17 @@ Ouvrir `index.html` par un double-clic ne fonctionne pas : le navigateur refuse 
 | S3 | 16–22 nov | ARP, ICMP et inspection | Khalil → Aziz → Ayoub → Ramy | 50 |
 | S4 | 23–29 nov | Catalogue de protocoles | Khalil → Aziz → Ayoub → Ramy | 67 |
 | S5 | 30 nov–6 déc | VR, PWA et extensions | Khalil → Aziz → Ayoub → Ramy | 86 |
-| S6 | 7–13 déc | Stabilisation et hors ligne | Aziz → Khalil → Ayoub → Ramy | 109 |
-| S7 | 14–20 déc | Livraison | Khalil → Aziz → Ayoub → Ramy | 122 |
+| S6 | 7–13 déc | Stabilisation et hors ligne | Khalil → Aziz → Ayoub → Ramy | 121 |
+| S7 | 14–20 déc | Livraison | Khalil → Aziz → Ayoub → Ramy | 148 |
 
 Nombre de fichiers par membre et par semaine (« — » : uniquement des tâches hors dépôt) :
 
 | Membre | S1 | S2 | S3 | S4 | S5 | S6 | S7 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Ramy | 8 | 6 | 5 | 6 | 9 | 12 | 15 |
-| Aziz | 16 | 9 | 6 | 6 | 4 | 8 | 4 |
-| Khalil | 13 | 9 | 6 | 3 | 15 | 24 | 12 |
-| Ayoub | 17 | 6 | 5 | 3 | 11 | 3 | 15 |
+| Ramy | 8 | 6 | 5 | 6 | 9 | 12 | 19 |
+| Aziz | 16 | 9 | 6 | 6 | 4 | 13 | 6 |
+| Khalil | 13 | 9 | 6 | 3 | 15 | 39 | 19 |
+| Ayoub | 17 | 6 | 5 | 3 | 11 | 7 | 16 |
 
 ## Compléments demandés par le superviseur (S5 à S7)
 

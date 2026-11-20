@@ -63,6 +63,17 @@ JavaScript : on écrit le fichier, puis on l'ajoute au catalogue `scenarios/inde
 | `services` | applications d'un serveur : `udp.listen`, `tcp.listen`, `dns.records`, `dhcp`, `http.pages` |
 | `model` | modèle du catalogue (`src/sim/catalog.js`), ex. `sw-24g`, `pc-fe` ; sinon le modèle par défaut du type |
 
+| `type: "firewall"` | pare-feu à états (laboratoire) : comme un routeur, plus des zones sur ses interfaces |
+| `vlans` | switch administrable : `{ "10": "ADMIN", "20": "ETUDIANTS" }` (le VLAN 1 existe toujours) |
+| `ports` | switch administrable, réglages par port : `{ "p1": { "vlan": 10 }, "u1": { "mode": "trunk", "allowed": [10, 20], "native": 1 }, "p5": { "security": { "maximum": 1, "sticky": true, "violation": "shutdown", "macs": [] } } }` |
+| `acls` | listes d'accès : `{ "WEB": [{ "action": "permit", "proto": "tcp", "src": "any", "dst": "host 172.16.1.80", "port": 80 }] }` — `src` / `dst` : `any`, `host A`, `A/longueur` ; refus implicite à la fin |
+| `nat` | `[{ "type": "static", "inside": "172.16.1.80", "outside": "203.0.113.5" }, { "type": "overload", "acl": "LAN" }]` |
+
+Champs d'interface ajoutés (routeur, pare-feu) : `vlan` et `parent` implicite pour une sous-interface `g0/0.10` ;
+`shutdown: true` ; `description` ; `acl: { "in": "WEB", "out": … }` ; `nat: "inside" | "outside"` ;
+`zone: "inside" | "dmz" | "outside"` et `level` (0 à 100) sur un pare-feu. Toutes ces valeurs sont aussi réglables à
+la console (`docs/console.md`).
+
 Règles vérifiées : adresses MAC au format `AA:BB:CC:DD:EE:FF` et uniques ; adresses IPv4 valides ;
 `prefix` entre 1 et 30 ; une interface sans `ip` est permise (poste qui attend DHCP).
 Un switch n'a ni MAC ni IP : ses ports sont déclarés par les câbles (`sw1:p1`).

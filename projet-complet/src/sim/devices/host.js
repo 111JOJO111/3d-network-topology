@@ -13,6 +13,10 @@ import {
 } from '../addr.js';
 
 export const texts = {
+  'host.noVlan': {
+    fr: '{name} reçoit une trame du VLAN {vlan} sur {iface}, mais n\'a aucune sous-interface pour ce VLAN : elle est ignorée.',
+    en: '{name} receives a VLAN {vlan} frame on {iface}, but has no sub-interface for that VLAN: it is ignored.',
+  },
   'host.notForMe': {
     fr: '{name} : la trame est adressée à {dst}, ce n\'est pas mon adresse MAC. Je l\'ignore.',
     en: '{name}: the frame is addressed to {dst}, which is not my MAC address. I ignore it.',
@@ -156,13 +160,25 @@ export class IpNode extends Device {
 
   /** Réception d'une trame : filtrage Ethernet, puis remise au bon protocole. */
   receive(packet, ifaceName) {
-    const iface = this.iface(ifaceName);
+    // Trame étiquetée (802.1Q) : elle appartient à la sous-interface de son VLAN.
+    let iface = this.iface(ifaceName);
+    if (packet.vlan) {
+      const sub = this.interfaces.find((item) => item.parent === ifaceName && item.vlan === packet.vlan);
+      if (!sub) return { accepted: false, notes: [note('host.noVlan', { name: this.name, vlan: packet.vlan, iface: ifaceName })] };
+      iface = sub;
+    }
     const forMe = packet.eth.dst === iface.mac;
     if (!forMe && !isGroupMac(packet.eth.dst)) {
       return { accepted: false, notes: [note('host.notForMe', { name: this.name, dst: packet.eth.dst })] };
     }
     if (packet.eth.type === 'ARP') return this.dispatch('eth:ARP', packet, iface);
     if (packet.eth.type === 'IPv6') return this.dispatch('eth:IPv6', packet, iface);
+    // Contrôles d'entrée d'un routeur ou d'un pare-feu : liste d'accès, NAT retour, pare-feu.
+    if (packet.ip && this.filterIn) {
+      const verdict = this.filterIn(packet, iface);
+      if (verdict.result) return verdict.result;
+      packet = verdict.packet;
+    }
     if (packet.ip) {
       const dst = packet.ip.dst;
       const local = this.ownsIp(dst) || dst === BROADCAST_IP

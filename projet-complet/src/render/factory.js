@@ -10,6 +10,7 @@ const MODEL_FILES = Object.freeze({
   server: 'server.glb',
   switch: 'switch.glb',
   router: 'router.glb',
+  firewall: 'firewall.glb',
 });
 
 export function createDeviceFactory(baseUrl = new URL('../../assets/models/', import.meta.url)) {

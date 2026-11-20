@@ -158,22 +158,51 @@ function finding(rule, severity, key, params, extra = {}) {
 const listNames = (items) => (items.length <= 1 ? items.join('') : `${items.slice(0, -1).join(', ')} & ${items.at(-1)}`);
 
 /** Vue pratique de la topologie : équipements, interfaces adressées, voisins, domaines. */
+/** Équipements qui routent (et donc séparent les domaines de diffusion). */
+export const ROUTING = new Set(['router', 'firewall']);
+export const isRouting = (def) => !!def && ROUTING.has(def.type);
+
 export function analyse(scenario) {
   const devices = new Map(scenario.devices.map((def) => [def.id, def]));
   const links = scenario.links || [];
   const nameOf = (id) => (devices.get(id) ? devices.get(id).name : id);
 
-  // Domaines de diffusion : une interface de PC/serveur/routeur est un nœud ; un switch
-  // entier est un seul nœud (il recopie la diffusion sur tous ses ports).
+  // Domaines de diffusion. Un nœud = une interface de PC, serveur, routeur ou pare-feu
+  // (une sous-interface VLAN est un nœud à part), ou un VLAN d'un switch (« sw1#10 ») :
+  // un switch recopie une diffusion sur tous ses ports du même VLAN.
   const parent = new Map();
-  const node = (end) => (devices.get(end.device) && devices.get(end.device).type === 'switch' ? end.device : `${end.device}:${end.iface}`);
   const find = (x) => {
     if (!parent.has(x)) parent.set(x, x);
     while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); }
     return x;
   };
   const union = (x, y) => parent.set(find(x), find(y));
-  for (const link of links) union(node(parseEndpoint(link.a)), node(parseEndpoint(link.b)));
+  const ALL = 'all';
+  /** Ce que porte une extrémité de câble : nœud sans étiquette, et nœud par VLAN étiqueté. */
+  const sideOf = (end) => {
+    const def = devices.get(end.device);
+    if (def && def.type === 'switch') {
+      const config = (def.ports || {})[end.iface] || {};
+      if (config.mode === 'trunk') {
+        const native = config.native || 1;
+        return { untagged: `${def.id}#${native}`, tagged: config.allowed ? config.allowed.filter((v) => v !== native) : ALL, node: (v) => `${def.id}#${v}`, vlans: Object.keys(def.vlans || {}).map(Number) };
+      }
+      return { untagged: `${def.id}#${config.vlan || 1}`, tagged: [], node: null, vlans: [] };
+    }
+    const subs = ((def && def.interfaces) || []).filter((iface) => iface.name.startsWith(`${end.iface}.`));
+    return { untagged: `${end.device}:${end.iface}`, tagged: subs.map((iface) => iface.vlan), node: (v) => `${end.device}:${(subs.find((iface) => iface.vlan === v) || {}).name}`, vlans: [] };
+  };
+  for (const link of links) {
+    const a = sideOf(parseEndpoint(link.a));
+    const b = sideOf(parseEndpoint(link.b));
+    union(a.untagged, b.untagged);
+    let shared = [];
+    if (a.tagged === ALL && b.tagged === ALL) shared = [...new Set([...a.vlans, ...b.vlans])].filter((v) => v !== 1);
+    else if (a.tagged === ALL) shared = b.tagged;
+    else if (b.tagged === ALL) shared = a.tagged;
+    else shared = a.tagged.filter((v) => b.tagged.includes(v));
+    for (const vlan of shared) union(a.node(vlan), b.node(vlan));
+  }
 
   // Interfaces adressées, avec leur domaine.
   const addressed = [];
@@ -259,7 +288,7 @@ function addressingRules(scenario, view, out) {
     const neighbour = addressed.find((entry) => entry.domain === domain);
     if (!neighbour) continue;
     const free = freeAddress(scenario, neighbour.iface.ip, neighbour.iface.prefix);
-    const router = addressed.find((entry) => entry.domain === domain && entry.def.type === 'router');
+    const router = addressed.find((entry) => entry.domain === domain && isRouting(entry.def));
     out.push(finding('addressing', 'error', 'noIp', { name: def.name, free, prefix: neighbour.iface.prefix }, {
       subject: def.id, devices: [def.id],
       fix: free ? { op: 'setIp', device: def.id, iface: iface.name, ip: free, prefix: neighbour.iface.prefix, gateway: router ? router.iface.ip : undefined } : null,
@@ -268,9 +297,9 @@ function addressingRules(scenario, view, out) {
   // Deux réseaux IP dans le même domaine de diffusion (sans routeur entre eux)
   const seenPairs = new Set();
   for (const a of addressed) {
-    if (a.def.type === 'router') continue;
+    if (isRouting(a.def)) continue;
     for (const b of addressed) {
-      if (b === a || b.def.type === 'router' || a.domain !== b.domain || a.network === b.network) continue;
+      if (b === a || isRouting(b.def) || a.domain !== b.domain || a.network === b.network) continue;
       // On ne signale que le poste qui n'est pas dans le réseau majoritaire du domaine.
       const domainNets = addressed.filter((e) => e.domain === a.domain).map((e) => e.network);
       const count = (net) => domainNets.filter((n) => n === net).length;
@@ -279,7 +308,7 @@ function addressingRules(scenario, view, out) {
       if (seenPairs.has(key)) continue;
       seenPairs.add(key);
       const free = freeAddress(scenario, a.iface.ip, a.iface.prefix);
-      const gateway = addressed.find((e) => e.domain === a.domain && e.def.type === 'router' && e.network === a.network);
+      const gateway = addressed.find((e) => e.domain === a.domain && isRouting(e.def) && e.network === a.network);
       out.push(finding('addressing', 'warning', 'mixedSubnets', {
         a: a.def.name, b: b.def.name, na: `${a.network}/${a.iface.prefix}`, nb: `${b.network}/${b.iface.prefix}`, free,
       }, {
@@ -301,12 +330,12 @@ function freeMac(scenario) {
 
 function gatewayRules(scenario, view, out) {
   const { addressed } = view;
-  const networks = [...new Set(addressed.filter((e) => e.def.type !== 'router').map((e) => `${e.network}/${e.iface.prefix}`))];
+  const networks = [...new Set(addressed.filter((e) => !isRouting(e.def)).map((e) => `${e.network}/${e.iface.prefix}`))];
   for (const def of scenario.devices) {
     if (def.type !== 'host' && def.type !== 'server') continue;
     const mine = addressed.find((e) => e.def === def);
     if (!mine) continue;
-    const router = addressed.find((e) => e.def.type === 'router' && e.domain === mine.domain && e.network === mine.network);
+    const router = addressed.find((e) => isRouting(e.def) && e.domain === mine.domain && e.network === mine.network);
     const params = { name: def.name, gateway: def.gateway, network: mine.network, prefix: mine.iface.prefix,
       suggest: router ? router.iface.ip : '—', router: router ? router.def.name : '—' };
     const fix = router ? { op: 'setGateway', device: def.id, gateway: router.iface.ip } : null;
@@ -316,7 +345,7 @@ function gatewayRules(scenario, view, out) {
         continue;
       }
       const owner = addressed.find((e) => e.iface.ip === def.gateway);
-      if (!owner || owner.def.type !== 'router') {
+      if (!owner || !isRouting(owner.def)) {
         params.owner = owner
           ? { fr: `est l'adresse de ${owner.def.name}, qui n'est pas un routeur`, en: `is the address of ${owner.def.name}, which is not a router` }
           : { fr: 'n\'appartient à aucun équipement', en: 'belongs to no device' };
@@ -331,12 +360,12 @@ function gatewayRules(scenario, view, out) {
 
 function routingRules(scenario, view, out) {
   const { addressed } = view;
-  const routers = scenario.devices.filter((def) => def.type === 'router');
+  const routers = scenario.devices.filter(isRouting);
   if (!routers.length) return;
   // Réseaux qui contiennent des PC ou serveurs.
   const targets = new Map();
   for (const e of addressed) {
-    if (e.def.type === 'router') continue;
+    if (isRouting(e.def)) continue;
     const key = `${e.network}/${e.iface.prefix}`;
     if (!targets.has(key)) targets.set(key, { network: e.network, prefix: e.iface.prefix, hosts: [] });
     targets.get(key).hosts.push(e.def.name);
@@ -350,7 +379,7 @@ function routingRules(scenario, view, out) {
     const result = [];
     for (const mine of connected(router)) {
       for (const other of addressed) {
-        if (other.def === router || other.def.type !== 'router') continue;
+        if (other.def === router || !isRouting(other.def)) continue;
         if (other.domain === mine.domain && other.network === mine.network) result.push({ router: other.def, via: other.iface.ip });
       }
     }
@@ -379,6 +408,8 @@ function routingRules(scenario, view, out) {
       // c'est le câblage qui manque (signalé ailleurs) — sauf s'il a des voisins.
       const hop = nextHop(router, target);
       if (!hop && !neighbours(router).length) continue;
+      // Réseau privé caché derrière un NAT : vu de l'extérieur, il n'a pas à être routé.
+      if (hop && addressed.some((e) => e.iface.ip === hop.via && e.iface.nat === 'outside')) continue;
       out.push(finding('routing', 'error', 'noRoute', {
         router: router.name, network: target.network, prefix: target.prefix, hosts: listNames(target.hosts.slice(0, 3)),
         via: hop ? hop.via : '—', next: hop ? hop.router.name : '—',
@@ -433,7 +464,7 @@ function cablingRules(scenario, view, out) {
       }));
     }
     for (const [def, end] of [[defA, a], [defB, b]]) {
-      if (def.type !== 'switch' && def.type !== 'router') continue;
+      if (def.type !== 'switch' && !isRouting(def)) continue;
       const model = modelOf(def);
       const names = portNames(model);
       if (!def.model || names.includes(end.iface)) continue;

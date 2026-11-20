@@ -2,7 +2,7 @@
 // Aucun logiciel de modélisation ni dépendance : chaque modèle est un assemblage de
 // boîtes et de cylindres décrit ci-dessous. Quelques kilo-octets par fichier.
 //
-//   node tools/make-models.mjs        -> écrit assets/models/{pc,server,switch,router}.glb
+//   node tools/make-models.mjs        -> écrit assets/models/{pc,server,switch,router,firewall}.glb
 //
 // Convention : origine au sol, au centre ; axe Y vers le haut ; face avant vers +Z.
 

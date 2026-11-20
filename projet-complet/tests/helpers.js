@@ -8,7 +8,7 @@ export function readScenario(name) {
   return JSON.parse(readFileSync(new URL(`../scenarios/${name}.json`, import.meta.url), 'utf8'));
 }
 
-const DEVICE_FILES = { host: 'host', server: 'host', router: 'router', switch: 'switch' };
+const DEVICE_FILES = { host: 'host', server: 'host', router: 'router', switch: 'switch', firewall: 'firewall' };
 
 /**
  * Ce qu'il manque encore dans le dépôt pour jouer un scénario, ou `false` si tout est là.

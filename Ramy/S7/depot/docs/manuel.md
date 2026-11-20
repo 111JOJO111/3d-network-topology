@@ -163,6 +163,28 @@ L'onglet **Construire** ouvre l'éditeur (détails : `docs/editeur.md`) :
 **Annuler** / **Rétablir** corrigent une erreur. Le réseau est enregistré automatiquement dans le navigateur ;
 **Enregistrer sous…** en garde plusieurs, **Exporter** / **Importer** passent par un fichier JSON.
 
+Sous chaque bouton **+**, la fiche du modèle choisi indique ses ports, sa description et son système (style de
+commandes IOS, VRP ou invite de commandes) ; un switch non administrable n'a pas de console.
+
+## 13. Le laboratoire et les consoles
+
+Le bouton **Laboratoire** (en haut à droite) vous fait entrer dans une salle où les équipements sont posés sur des
+paillasses. **ZQSD** / **WASD** pour marcher, la **souris** pour regarder (cliquez d'abord dans la scène), **E** pour
+ouvrir la **console** de l'équipement visé, **V** pour voir la salle d'en haut, **Échap** pour libérer la souris.
+L'étagère **Catalogue** contient un exemplaire de chaque modèle : cliquez-en un pour le poser devant vous.
+
+La console (aussi accessible par **Ouvrir la console** dans le panneau Équipement) accepte de vraies commandes :
+`enable`, `configure terminal`, `show ip route`, `interface g0/1`, `ip address …`, `switchport access vlan 20`,
+`ip access-list extended …`, `ping 10.0.2.10`… **Tab** complète, **?** affiche l'aide, **↑ ↓** reprennent une
+commande. Toute la liste : `docs/console.md`.
+
+L'onglet **Missions** propose six exercices guidés (une panne à réparer, un pare-feu à ouvrir, un réseau à
+construire de zéro) : les objectifs se cochent tout seuls, avec trois indices et une explication « Pourquoi ? ».
+
+En VR, vous êtes dans le laboratoire à l'échelle réelle : gâchette sur le sol pour vous téléporter, joystick pour
+tourner, gâchette sur un équipement pour ouvrir sa console sur un pupitre avec un **clavier 3D**. Détails :
+`docs/laboratoire.md`.
+
 ## 9. Dépannage
 
 | Problème | Solution |

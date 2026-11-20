@@ -247,7 +247,8 @@ export async function initRender({ container, sim }) {
       lastTime = time;
       if (loopTick) loopTick(dt);
       for (const callback of frameCallbacks) callback(dt);
-      if (!render.isPresenting()) controls.update();
+      // Vue à la première personne (laboratoire) : la caméra est pilotée par src/render/lab.js.
+      if (!render.isPresenting() && !render.manualCamera) controls.update();
       draw();
     },
     /** Suspend / reprend la boucle normale (le pont VR prend le relais pendant la session). */
@@ -256,6 +257,19 @@ export async function initRender({ container, sim }) {
     /** Vrai pendant une session VR, quelle que soit la voie utilisée. */
     isPresenting() { return renderer.xr.isPresenting || render.bridgePresenting === true; },
     bridgePresenting: false,
+    /** Vrai quand un module (le laboratoire) pilote lui-même la caméra. */
+    manualCamera: false,
+    grid: stage.grid,
+    /** Cadre la caméra de survol sur une boîte (coordonnées de la scène). */
+    frameBox: (box) => stage.frame(box),
+    /** Nouveau modèle 3D d'un équipement (GLB ou forme simple), hors topologie. */
+    createDeviceModel: (def) => factory.create(def),
+    /** Taille des étiquettes (1 : normale). Le laboratoire les réduit un peu. */
+    setLabelScale(size) {
+      labelSize = size;
+      for (const entry of devices.values()) resizeLabel(entry.label, labelSize);
+      for (const tag of linkLabels) resizeLabel(tag, tag.userData.base * labelSize);
+    },
   };
   for (const name of RENDER_API) {
     if (!(name in render)) throw new Error(`API de rendu incomplète : « ${name} » manque`);
@@ -282,6 +296,12 @@ export async function initRender({ container, sim }) {
     render.linkLoad = createLinkLoad(render, sim);
   } catch (error) {
     console.warn('[rendu] charge des liens indisponible', error.message || error);
+  }
+  try {
+    const { createLab } = await import('./lab.js');
+    render.lab = createLab(render, sim);
+  } catch (error) {
+    console.warn('[rendu] laboratoire indisponible', error.message || error);
   }
   if (sim.scenario) showTopology(sim.scenario);
   return render;

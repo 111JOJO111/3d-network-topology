@@ -23,6 +23,9 @@ import { initInstall } from './install.js';
 import { initTabs } from './tabs.js';
 import { initDiagnosticPanel } from './diagnosticPanel.js';
 import { initEditorPanel } from './editorPanel.js';
+import { createTerminals } from './terminal.js';
+import { initLabHud } from './labHud.js';
+import { initMissions } from './missions.js';
 
 registerStrings({
   fr: {
@@ -53,7 +56,10 @@ export function initUI(app) {
   initScenarioPicker(app);
   initInstall(app);
   app.diagnostic = initDiagnosticPanel(app);
+  app.terminals = createTerminals(app);
   app.editor = initEditorPanel(app);
+  app.missions = initMissions(app);
+  app.labHud = initLabHud(app);
 
   applyI18n(document);
 }

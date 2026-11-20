@@ -119,7 +119,7 @@ En pause, l'étape 2 ne fait rien : les paquets restent figés, mais la caméra 
 | F01 | topologies JSON, exploration 3D souris/toucher | `scenarios/`, `src/render/`, OrbitControls |
 | F02 | animations et explications pas à pas | `packetAnimator.js`, `explanations.js` |
 | F03 | ARP, ICMP, DNS, DHCP, TCP, UDP | `src/sim/protocols/` + un scénario chacun |
-| F04 | HTTP, commutation, routage statique | `http.js`, `switch.js`, `router.js` ; HTTPS et VLAN expliqués mais non simulés |
+| F04 | HTTP, commutation, routage statique | `http.js`, `switch.js`, `router.js` ; VLAN, ACL, NAT et pare-feu simulés (laboratoire, S6) ; HTTPS expliqué mais non simulé |
 | F05 | inspection des paquets | `inspector.js` + `describe()` de chaque protocole |
 | F06 | lecture, pause, pas à pas, vitesse, réinitialisation | `commands.js`, `controls.js` |
 | F07 | accès par URL, PWA installable, cache | GitHub Pages, `manifest.json`, `sw.js`, `install.js` |
@@ -137,6 +137,16 @@ En pause, l'étape 2 ne fait rien : les paquets restent figés, mais la caméra 
 | VR en WebGPU, panneau VR Étape / Fiche / Diagnostic | `gpuBridge.js`, `vrInfoPanel.js`, `session.js`, `controllers.js` | [vr-webgpu.md](vr-webgpu.md) |
 | Scénarios ARP et traceroute | `scenarios/arp.json`, `scenarios/traceroute.json` | [protocoles/arp.md](protocoles/arp.md) |
 | Vérification HTTPS / TLS du site publié, chaque semaine en CI | `tools/verify-https.mjs`, `.github/workflows/ci.yml` | [lancement-deploiement.md](lancement-deploiement.md) |
+| Laboratoire : VLAN 802.1Q, sous-interfaces, sécurité de port, ACL, NAT/PAT, pare-feu à états | `security.js`, `devices/firewall.js`, `switch.js`, `router.js`, `network.js` | [laboratoire.md](laboratoire.md) |
+| Consoles IOS / VRP / PC par modèle, missions guidées | `cli.js`, `config.js`, `missions.js`, `terminal.js`, `missions.js` (ui) | [console.md](console.md) |
+| Salle 3D à la première personne, étagère-catalogue ; VR : téléportation, clavier 3D | `render/lab.js`, `labHud.js`, `xr/vrConsole.js`, `controllers.js` | [laboratoire.md](laboratoire.md) |
+
+**Laboratoire — circulation des données.** Une commande de configuration tapée dans une console (fenêtre ou
+pupitre VR) passe par `cli.js`, qui appelle une fonction pure de `config.js` : elle rend un **nouveau scénario**,
+validé, que la simulation recharge (ou l'éditeur, s'il est ouvert, pour garder l'historique). Les commandes
+`show` / `display` lisent l'état vivant de la simulation ; `ping` et `traceroute` rendent des étapes jouées dans la
+scène, dont les réponses sont mises en forme par `formatRun`. Les missions évaluent le scénario, l'historique des
+consoles et les pings réussis : elles ne dépendent pas de la façon dont Steve a obtenu le résultat.
 
 Pour aller plus loin : [simulation.md](simulation.md) · [rendu-3d.md](rendu-3d.md) · [lancement-deploiement.md](lancement-deploiement.md) ·
 [conception/classes.md](conception/classes.md) · [protocoles/](protocoles/).

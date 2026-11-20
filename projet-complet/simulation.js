@@ -107,6 +107,16 @@ export function createSimulation() {
       return engine.play();
     },
 
+    /**
+     * Comme runAction, avec plusieurs étapes jouées l'une après l'autre (ex. les sondes d'un
+     * traceroute lancé depuis une console : les caches ARP restent remplis entre elles).
+     */
+    runActions(steps) {
+      customSteps = [...steps];
+      engine.reset();
+      return engine.play();
+    },
+
     /** Vrai si une action lancée à la main remplace les étapes du scénario. */
     isCustom() { return customSteps !== null; },
 

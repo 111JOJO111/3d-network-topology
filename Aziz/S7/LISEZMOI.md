@@ -2,7 +2,7 @@
 
 **Objectif du sprint.** Produire la vidéo, finir la documentation et préparer la soutenance. Seuls ajouts : ceux demandés par le superviseur (éditeur de topologie, VR en WebGPU, vérification HTTPS).
 
-**Résultat attendu le dimanche.** Tous les livrables sont remis. Deux répétitions de soutenance à quatre.
+**Résultat attendu le dimanche.** Tous les livrables sont remis. Deux répétitions de soutenance à quatre. Laboratoire de Steve : salle 3D à la première personne et en VR, consoles IOS / VRP / PC par modèle, clavier 3D, missions guidées.
 
 **Jalon.** v1.0 le 18 déc, remise le 20 déc
 
@@ -13,19 +13,22 @@
 | 74 | Filmer la démo sur PC, mobile et VR émulée. | (hors dépôt) | 2 |
 | 75 | Monter la vidéo (5 minutes maximum). | (hors dépôt) | 2 |
 | 91 | Demande du superviseur — glisser-déposer des équipements, recadrage automatique, boucle d'image partagée avec la VR ; WebGPU gardé même quand la VR est possible. | src/render/dragControls.js, src/render/index.js, src/render/scene.js | 3 |
+| 99 | Demande du superviseur — laboratoire en 3D : salle (sol, murs, plafond lumineux, porte, tableau blanc), paillasses et baies sous les équipements, étagère-catalogue avec tous les modèles ; vue à la première personne (ZQSD/WASD, souris, viseur, E pour la console) et vue de survol ; écran tactile (joystick). | src/render/lab.js, src/render/index.js, src/ui/labHud.js | 5 |
 
-Total : **7 points**.
+Total : **12 points**.
 
 ## Ce que contient ce dossier
 
-`depot/` — **4 fichiers** à copier dans le dépôt, rangés exactement comme dans le dépôt :
+`depot/` — **6 fichiers** à copier dans le dépôt, rangés exactement comme dans le dépôt :
 
 | Fichier | État | Tâche |
 | --- | --- | --- |
 | `src/render/dragControls.js` | nouveau | n° 91 |
 | `src/render/index.js` | modifié | n° 91 |
+| `src/render/lab.js` | nouveau | n° 99 |
 | `src/render/links.js` | modifié | n° 91 |
 | `src/render/scene.js` | modifié | n° 91 |
+| `src/ui/labHud.js` | nouveau | n° 99 |
 
 « nouveau » : le fichier n'existait pas. « modifié » : il remplace la version de la semaine précédente (c'est le fichier complet, pas un correctif).
 
@@ -55,7 +58,7 @@ git status
 
 PowerShell (au lieu de `cp`) : `Copy-Item ..\Aziz\S7\depot\* . -Recurse -Force`
 
-`git status` doit lister exactement les 4 fichiers du tableau ci-dessus.
+`git status` doit lister exactement les 6 fichiers du tableau ci-dessus.
 
 ### 3. Vérifier
 
@@ -64,13 +67,16 @@ npm test
 npm start        # puis ouvrir http://localhost:8080 ; Ctrl+C pour arrêter
 ```
 
-Tes deux tâches (tournage et montage) sont hors dépôt. Le dossier `hors-depot/` contient un premier montage de la vidéo et la liste de ce qu'il reste à tourner. Superviseur : onglet Construire, glisser un équipement : il se déplace et ses câbles suivent ; la pastille indique « WebGPU » même avec l'émulateur VR.
+Tes deux tâches (tournage et montage) sont hors dépôt. Le dossier `hors-depot/` contient un premier montage de la vidéo et la liste de ce qu'il reste à tourner. Superviseur : onglet Construire, glisser un équipement : il se déplace et ses câbles suivent ; la pastille indique « WebGPU » même avec l'émulateur VR. Laboratoire : le bouton « Laboratoire » fait entrer dans la salle ; ZQSD/WASD et la souris déplacent ; E ouvre la console de l'équipement visé ; V passe en survol.
 
 ### 4. Un commit par tâche
 
 ```bash
 git add src/render/dragControls.js src/render/index.js src/render/links.js src/render/scene.js
 git commit -m "S7 n°91 : glisser-déposer et boucle d'image partagée"
+
+git add src/render/lab.js src/ui/labHud.js
+git commit -m "S7 n°99 : laboratoire 3D : salle, première personne, étagère-catalogue"
 ```
 
 `git status` doit ensuite afficher « nothing to commit, working tree clean ».
@@ -97,5 +103,5 @@ git branch -d feature/aziz-s7-glisser-deposer
 
 Dans cet ordre, les tests passent et l'application démarre après chaque fusion. Un test qui dépend de la partie d'un autre, pas encore fusionnée, s'affiche « skipped » : il s'activera tout seul. Attends que Khalil ait fusionné, puis mets ta branche à jour avant de fusionner : `git pull --rebase origin main` puis `git push --force-with-lease`.
 
-À la fin de la semaine, une fois les parties de chacun fusionnées, `npm test` annonce **122 tests réussis**.
+À la fin de la semaine, une fois les parties de chacun fusionnées, `npm test` annonce **148 tests réussis**.
 

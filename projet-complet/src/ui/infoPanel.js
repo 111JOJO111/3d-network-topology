@@ -6,12 +6,13 @@ import { Topics } from '../sim/events.js';
 import { el, panelTitle } from './dom.js';
 import { applyI18n, localize, onLangChange, registerStrings, t } from './i18n.js';
 import { datasheetSection } from './datasheet.js';
+import { hasConsole } from './terminal.js';
 
 registerStrings({
   fr: {
     'info.title': 'Équipement',
     'info.hint': 'Cliquez (ou touchez) un équipement dans la scène pour afficher ses adresses.',
-    'info.type.host': 'PC', 'info.type.server': 'Serveur', 'info.type.switch': 'Switch', 'info.type.router': 'Routeur',
+    'info.type.host': 'PC', 'info.type.server': 'Serveur', 'info.type.switch': 'Switch', 'info.type.router': 'Routeur', 'info.type.firewall': 'Pare-feu',
     'info.iface': 'Interface', 'info.ip': 'Adresse IP', 'info.mac': 'Adresse MAC',
     'info.noip': 'non configurée', 'info.gateway': 'Passerelle', 'info.dns': 'Serveur DNS',
     'info.ports': 'Ports', 'info.switch': 'Un switch travaille avec les adresses MAC : il n\'a pas d\'adresse IP.',
@@ -22,7 +23,7 @@ registerStrings({
   en: {
     'info.title': 'Device',
     'info.hint': 'Click (or tap) a device in the scene to display its addresses.',
-    'info.type.host': 'PC', 'info.type.server': 'Server', 'info.type.switch': 'Switch', 'info.type.router': 'Router',
+    'info.type.host': 'PC', 'info.type.server': 'Server', 'info.type.switch': 'Switch', 'info.type.router': 'Router', 'info.type.firewall': 'Firewall',
     'info.iface': 'Interface', 'info.ip': 'IP address', 'info.mac': 'MAC address',
     'info.noip': 'not configured', 'info.gateway': 'Gateway', 'info.dns': 'DNS server',
     'info.ports': 'Ports', 'info.switch': 'A switch works with MAC addresses: it has no IP address.',
@@ -55,6 +56,11 @@ export function initInfoPanel(app, slot = document.getElementById('info')) {
     const children = [
       el('h2', { class: 'panel-title' }, device.name, ' ', el('span', { class: `tag tag-${device.type}` }, t('info.type.' + device.type))),
     ];
+    // Console de l'équipement (laboratoire de Steve) : un clic ouvre son terminal.
+    const def = sim.scenario && sim.scenario.devices.find((d) => d.id === device.id);
+    if (app.terminals && hasConsole(def)) {
+      children.push(el('button', { type: 'button', class: 'btn btn-wide term-open', id: 'console-button', onclick: () => app.terminals.open(device.id) }, '>_ ', t('term.open')));
+    }
     if (device.type === 'switch') {
       children.push(el('p', { class: 'muted' }, t('info.switch')));
       children.push(el('p', {}, el('strong', {}, t('info.ports') + ' : '), device.interfaces.map((iface) => iface.name).join(', ')));

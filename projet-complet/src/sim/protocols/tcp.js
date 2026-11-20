@@ -142,7 +142,11 @@ const keyOf = (localIp, localPort, remoteIp, remotePort) => `${localIp}:${localP
 
 /** Connexion vue par l'équipement à l'autre bout (le simulateur voit les deux côtés). */
 function peerOf(conn) {
-  return conn.device.net.tcpConns.get(keyOf(conn.remoteIp, conn.remotePort, conn.localIp, conn.localPort)) || null;
+  const direct = conn.device.net.tcpConns.get(keyOf(conn.remoteIp, conn.remotePort, conn.localIp, conn.localPort));
+  if (direct) return direct;
+  // À travers un NAT, les deux extrémités ne voient pas les mêmes adresses : on retrouve
+  // l'autre bout grâce à l'identifiant interne de connexion porté par le SYN.
+  return (conn.peerUid && conn.device.net.tcpByUid && conn.device.net.tcpByUid.get(conn.peerUid)) || null;
 }
 
 function register(conn) {
@@ -167,6 +171,7 @@ function segment(conn, flags, { data = '', explain, extra = {} } = {}) {
     ...extra,
     tcp: { srcPort: conn.localPort, dstPort: conn.remotePort, flags, seq: conn.snd, ack: flags.includes('ACK') ? conn.rcv : 0, len },
   };
+  if (conn.uid) packet.tcp.conn = conn.uid; // repère interne du simulateur (pas un vrai champ TCP)
   if (len) packet.data = data;
   // SYN et FIN comptent chacun pour un octet dans la numérotation.
   conn.snd += len + (flags.includes('SYN') ? 1 : 0) + (flags.includes('FIN') ? 1 : 0);
@@ -202,6 +207,7 @@ function receive(device, net, packet) {
       localIp: ip.dst, localPort: seg.dstPort, remoteIp: ip.src, remotePort: seg.srcPort,
       snd: SERVER_ISN, rcv: seg.seq + 1,
     };
+    conn.peerUid = seg.conn || null;
     register(conn);
     net.update(device, 'tcp');
     segment(conn, ['SYN', 'ACK'], {
@@ -441,6 +447,9 @@ const tcpApi = {
       snd: CLIENT_ISN, rcv: 0,
       openedAt: device.net.now,
     };
+    conn.uid = `${device.id}:${conn.localPort}:${++device.net.tcpUidSeq || (device.net.tcpUidSeq = 1)}`;
+    if (!device.net.tcpByUid) device.net.tcpByUid = new Map();
+    device.net.tcpByUid.set(conn.uid, conn);
     register(conn);
     device.net.update(device, 'tcp');
     segment(conn, ['SYN'], { explain: note('tcp.syn', { name: device.name, dst, port, seq: CLIENT_ISN }) });

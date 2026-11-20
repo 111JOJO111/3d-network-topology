@@ -133,8 +133,11 @@ Tester, corriger, faire marcher l'appli sans internet et écrire la documentatio
 | 86 | Khalil | ★ Demande du superviseur — scénario ARP détaillé : diffusion, cache, absence de réponse, passerelle. | 1 | À faire |
 | 87 | Aziz | ★ Demande du superviseur — scénario traceroute : TTL de 1 à 4 à travers trois routeurs. | 1 | À faire |
 | 88 | Ramy | ★ Demande du superviseur — onglets de la colonne de droite, onglet Diagnostic (Montrer, Corriger, Tout corriger), fiche technique et ports en direct dans le panneau d'infos. | 4 | À faire |
+| 94 | Khalil | ★ Demande du superviseur — laboratoire : moteur réseau des équipements administrables. VLAN 802.1Q (accès, trunk, VLAN natif) et sous-interfaces de routeur (router-on-a-stick), interfaces éteintes (shutdown / err-disabled), listes d'accès (ACL) avec compteurs, NAT statique et PAT, nouveau type d'équipement « pare-feu » à états (zones inside / dmz / outside, sessions). Scénario Pare-feu et NAT, tests. | 5 | À faire |
+| 95 | Ayoub | ★ Demande du superviseur — laboratoire : switch administrable. Ports d'accès et trunk étiquetés 802.1Q, table MAC par VLAN, sécurité de port (maximum, sticky, violation shutdown / restrict / protect). Scénarios VLAN et Sécurité de port, ajoutés au catalogue. | 3 | À faire |
+| 96 | Aziz | ★ Demande du superviseur — laboratoire : modèle 3D du pare-feu (ports colorés par zone), forme simple de repli, câbles coupés (shutdown, err-disabled) en rouge foncé. | 2 | À faire |
 
-Points : Ramy 10 · Aziz 7 · Khalil 11 · Ayoub 6
+Points : Ramy 10 · Aziz 9 · Khalil 16 · Ayoub 9
 
 ## S7 — Livraison (14–20 déc)
 
@@ -155,5 +158,9 @@ Produire la vidéo, finir la documentation et préparer la soutenance. Seuls ajo
 | 91 | Aziz | ★ Demande du superviseur — glisser-déposer des équipements, recadrage automatique, boucle d'image partagée avec la VR ; WebGPU gardé même quand la VR est possible. | 3 | À faire |
 | 92 | Ayoub | ★ Demande du superviseur — VR en WebGPU (voie native, pont pour émulateur, repli WebGL 2), manettes du pont, second panneau VR (Étape, Fiche, Diagnostic), tolérance de visée ; garde-fou contre les boucles entre switchs. | 4 | À faire |
 | 93 | Ayoub | ★ Demande du superviseur — vérification HTTPS / TLS du site publié, après chaque déploiement et chaque lundi en CI ; fichier ATTRIBUTION. | 2 | À faire |
+| 97 | Khalil | ★ Demande du superviseur — laboratoire : consoles des équipements. Interpréteur de commandes en trois styles selon le modèle (IOS, VRP, invite de commandes du PC) : modes, abréviations, aide « ? », complétion, show / display, configuration qui modifie vraiment le réseau, ping et traceroute joués dans la scène. Missions guidées vérifiées automatiquement. | 5 | À faire |
+| 98 | Ramy | ★ Demande du superviseur — laboratoire : fenêtre de console (onglets par équipement, historique, Tab, ?), bouton Console dans le panneau Équipement, catalogue de l'éditeur avec la fiche de chaque modèle (description, ports, système), onglet Missions (objectifs, indices, « Pourquoi ? »). Manuel du laboratoire. | 5 | À faire |
+| 99 | Aziz | ★ Demande du superviseur — laboratoire en 3D : salle (sol, murs, plafond lumineux, porte, tableau blanc), paillasses et baies sous les équipements, étagère-catalogue avec tous les modèles ; vue à la première personne (ZQSD/WASD, souris, viseur, E pour la console) et vue de survol ; écran tactile (joystick). | 5 | À faire |
+| 100 | Ayoub | ★ Demande du superviseur — laboratoire en VR : salle à l'échelle réelle, téléportation au sol, rotation par crans, console en VR avec clavier 3D et raccourcis de commandes, ajout d'équipements depuis l'étagère et câblage à la manette. Vérifié dans l'émulateur avec WebGPU (aucun contexte WebGL). | 5 | À faire |
 
-Points : Ramy 9 · Aziz 7 · Khalil 8 · Ayoub 10
+Points : Ramy 14 · Aziz 12 · Khalil 13 · Ayoub 15

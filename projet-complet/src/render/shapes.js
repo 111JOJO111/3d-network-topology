@@ -9,6 +9,7 @@ export const DEVICE_COLORS = Object.freeze({
   server: 0x8b5cf6,
   switch: 0x10b981,
   router: 0xf97316,
+  firewall: 0xdc2626,
 });
 
 const cache = new Map();
@@ -27,10 +28,11 @@ const GEOMETRIES = {
   server: () => new THREE.BoxGeometry(0.8, 1.6, 1.0),
   switch: () => new THREE.BoxGeometry(1.8, 0.35, 1.0),
   router: () => new THREE.CylinderGeometry(0.75, 0.75, 0.45, 24),
+  firewall: () => new THREE.BoxGeometry(1.7, 0.45, 1.0),
 };
 
 /** Hauteur approximative de chaque type, pour poser l'étiquette au-dessus. */
-export const DEVICE_HEIGHT = Object.freeze({ host: 1.0, server: 1.6, switch: 0.4, router: 0.6 });
+export const DEVICE_HEIGHT = Object.freeze({ host: 1.0, server: 1.6, switch: 0.4, router: 0.6, firewall: 0.55 });
 
 /** Crée la forme simple d'un équipement, posée sur le sol (y = 0). */
 export function createShape(type) {

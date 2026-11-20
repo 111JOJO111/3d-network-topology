@@ -25,6 +25,10 @@ export const CORE_TEXTS = {
     fr: 'Action « {action} » inconnue : aucun protocole chargé ne sait la lancer.',
     en: 'Unknown action "{action}": no loaded protocol can start it.',
   },
+  'net.ifaceDown': {
+    fr: 'L\'interface {iface} de {name} est éteinte (shutdown) ou bloquée : rien ne passe.',
+    en: 'Interface {iface} of {name} is shut down or blocked: nothing goes through.',
+  },
   'net.lost': {
     fr: 'La trame « {label} » se perd sur le câble entre {from} et {to} (perturbation simulée) : elle n\'arrivera jamais.',
     en: 'The frame "{label}" is lost on the cable between {from} and {to} (simulated interference): it will never arrive.',
@@ -43,12 +47,35 @@ export class Device {
     this.id = def.id;
     this.type = def.type;
     this.name = def.name;
+    // Réglages avancés d'une interface (laboratoire, S6) : sous-interface d'un VLAN
+    // (« g0/0.10 » avec vlan 10), interface éteinte (shutdown), liste d'accès, rôle NAT,
+    // zone et niveau de sécurité d'un pare-feu.
     this.interfaces = (def.interfaces || []).map((iface) => ({
       name: iface.name,
       mac: iface.mac ? iface.mac.toUpperCase() : null,
       ip: iface.ip || null,
       prefix: iface.prefix || null,
+      parent: iface.name.includes('.') ? iface.name.split('.')[0] : null,
+      vlan: iface.vlan || null,
+      shutdown: iface.shutdown === true,
+      errDisabled: false,
+      acl: iface.acl || null,
+      nat: iface.nat || null,
+      zone: iface.zone || null,
+      level: iface.level != null ? iface.level : null,
+      description: iface.description || null,
     }));
+    for (const iface of this.interfaces) {
+      if (iface.parent && !iface.mac) iface.mac = (this.iface(iface.parent) || {}).mac || null;
+    }
+  }
+
+  /** Vrai si l'interface (ou son interface physique) est éteinte ou bloquée. */
+  isDown(name) {
+    const iface = this.iface(name);
+    if (!iface) return false;
+    if (iface.shutdown || iface.errDisabled) return true;
+    return iface.parent ? this.isDown(iface.parent) : false;
   }
 
   iface(name) {
@@ -159,6 +186,17 @@ export class Network {
    * @param {Object} [options] delay : temps de traitement ; onDelivered : remplace device.receive()
    */
   transmit(device, ifaceName, packet, notes = [], { delay = PROCESS_DELAY, onDelivered = null } = {}) {
+    // Sous-interface « g0/0.10 » : la trame sort par l'interface physique g0/0, marquée
+    // de l'étiquette 802.1Q du VLAN 10.
+    const sub = device.iface ? device.iface(ifaceName) : null;
+    if (sub && sub.parent) {
+      packet = this.clone(packet, { vlan: sub.vlan });
+      ifaceName = sub.parent;
+    }
+    if (device.isDown && device.isDown(ifaceName)) {
+      this.drop(device, packet, [note('net.ifaceDown', { name: device.name, iface: ifaceName })]);
+      return false;
+    }
     const wire = this.peer(device.id, ifaceName);
     if (!wire) {
       this.drop(device, packet, [note('net.unplugged', { name: device.name, iface: ifaceName })]);
@@ -206,6 +244,11 @@ export class Network {
       }
       this.engine.schedule(duration, () => {
         this.traffic.received(`${wire.device.id}:${wire.iface}`, bytes, this.now);
+        // Une interface éteinte ne reçoit rien.
+        if (wire.device.isDown && wire.device.isDown(wire.iface)) {
+          this.drop(wire.device, packet, [note('net.ifaceDown', { name: wire.device.name, iface: wire.iface })], { tx, linkId: wire.linkId, onLink: true });
+          return;
+        }
         const result = onDelivered
           ? onDelivered(wire.device, wire.iface)
           : wire.device.receive(packet, wire.iface);
@@ -318,7 +361,7 @@ export class Network {
 }
 
 /** Fichier qui code le comportement de chaque type d'équipement. */
-const DEVICE_MODULES = { host: 'host', server: 'host', router: 'router', switch: 'switch' };
+const DEVICE_MODULES = { host: 'host', server: 'host', router: 'router', switch: 'switch', firewall: 'firewall' };
 
 /**
  * Charge les fabriques des types d'équipement présents dans un scénario (patron Factory).

@@ -13,6 +13,7 @@ import { initControllers } from './controllers.js';
 import { isVRSupported } from './support.js';
 import { openVR } from './gpuBridge.js';
 import { combinePanels, createVRInfoPanel } from './vrInfoPanel.js';
+import { createVRConsole } from './vrConsole.js';
 
 registerStrings({
   fr: {
@@ -60,17 +61,23 @@ export function initVRSession(app, slot) {
 
   let opened = null; // { session, mode, rig, end }
   let infoPanel = null;
+  let vrConsole = null;
   function onStart() {
     saved = { position: render.camera.position.clone(), quaternion: render.camera.quaternion.clone() };
     render.controls.enabled = false;
-    render.setVRMode(true);
+    // En VR, Steve est dans le laboratoire, à l'échelle réelle (src/render/lab.js).
+    if (render.lab) render.lab.enterVR();
+    else render.setVRMode(true);
     panel = createVRPanel(app, () => session && session.end());
     render.scene.add(panel.object);
     // Second panneau (étape, fiche technique, diagnostic) à droite ; les manettes visent les deux.
     infoPanel = createVRInfoPanel(app);
     render.scene.add(infoPanel.object);
-    controllers = initControllers(app, combinePanels([panel, infoPanel]), opened.rig);
-    app.xr.panels = { controls: panel, info: infoPanel }; // utile aux tests de bout en bout
+    // Troisième panneau devant Steve : la console de l'équipement choisi et son clavier 3D.
+    vrConsole = createVRConsole(app);
+    render.scene.add(vrConsole.object);
+    controllers = initControllers(app, combinePanels([panel, infoPanel, vrConsole]), opened.rig);
+    app.xr.panels = { controls: panel, info: infoPanel, console: vrConsole }; // utile aux tests de bout en bout
     refresh();
   }
 
@@ -89,7 +96,9 @@ export function initVRSession(app, slot) {
       infoPanel.dispose();
       infoPanel = null;
     }
-    render.setVRMode(false);
+    if (vrConsole) { render.scene.remove(vrConsole.object); vrConsole.dispose(); vrConsole = null; }
+    if (render.lab && render.lab.inVR) render.lab.exitVR();
+    else render.setVRMode(false);
     if (saved) {
       render.camera.position.copy(saved.position);
       render.camera.quaternion.copy(saved.quaternion);
